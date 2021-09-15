@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/login.css" />
+    <script src="../../js/vue-v2.6.10.js"></script>
+    <script src="../../js/axios-0.18.0.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="pos">
+            <div class="login">
+                <span class="close iconfont icon-close"></span>
+                <img src="../../img/login/loginlogo.png" alt="">
+                <ul>
+                    <li></li>
+                    <li class="phone" style="color: red;" v-html="msg"></li>
+                    <li></li>
+                </ul>
+                <form action="" id="form">
+                    <input type="text" class="tel" v-model="phone" @blur="checkPhone()" id="" placeholder="请输入您的手机号">
+                    <input type="password" class="pass" v-model="password" @blur="checkPassword()" id="" placeholder="请输入密码">
+                    <em></em>
+                    <div class="loginbtn" style="margin-left: 110px;line-height: 40px;" @click="loginByPhone()">
+                        登陆
+                    </div>
+                </form>
+                <p>
+                    <span><a href="javascript:;">忘记密码</a></span>
+                    <span>
+                        还没有账号?
+                        <a href="../loginAndRegister/register.html">点击注册</a>
+                    </span>
+                </p>
+                <ul>
+                    <li></li>
+                    <li class="phone">使用第三方软件登录</li>
+                    <li></li>
+                </ul>
+                <p class="getCenter">
+                    <img src="../../img/login/wx.png" alt="">
+                    <img src="../../img/login/qq.png" alt="">
+                    <img src="../../img/login/sina.png" alt="">
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            phone:"",
+            password:"",
+            msg:"",
+            phone_flag:false,
+            password_flag:false
+        },
+        methods: {
+            checkPhone() {
+                if (this.phone == null || this.phone.trim() == '') {
+                    this.msg = '手机号不能为空';
+                    this.phone_flag = false;
+                } else {
+                    var rule = /^1[3|5|6|7|8|9][0-9]{9}$/;
+                    if (rule.test(this.phone)) {
+                        axios({
+                            method: "post",
+                            url: "http://localhost:8080/yx_education_war_exploded/user?type=getuserByPhone&phone=" + this.phone
+                        }).then(obj => {
+                            if (obj.data.status == 1) {
+                                this.msg = '';
+                                this.phone_flag = true;
+                            } else {
+                                this.msg = '请先<a href="register.html">注册</a>';
+                                this.phone_flag = false;
+                            }
+                        });
+
+                    } else {
+                        this.msg = '手机号格式不正确';
+                        this.phone_flag = false;
+                    }
+                }
+            },
+            checkPassword() {
+                if (this.password == null || this.password.trim() == '') {
+                    this.msg = '密码不能为空';
+                    this.password_flag = false;
+                } else {
+                    if (this.password.length >= 6 && this.password.length <= 12) {
+                        this.msg = '';
+                        this.password_flag = true;
+                    } else {
+                        this.msg = '密码是6-12位字符';
+                        this.password_flag = false;
+                    }
+                }
+            },
+            loginByPhone(){
+                if(this.phone_flag&&this.password_flag){
+                    var params = new URLSearchParams();
+                    params.append("phone",this.phone);
+                    params.append("password",this.password);
+                    axios({
+                            method: "post",
+                            url: "http://localhost:8080/yx_education_war_exploded/user?type=loginByPhone",
+                            data:params
+                        }).then(obj => {
+                            console.log(obj)
+                            if(obj.data.status == 1){
+                                sessionStorage.setItem("user",JSON.stringify(obj.data.data));
+                                alert(obj.data.message);
+                                location.href = "../../index.html"
+                            }else{
+                                alert(obj.data.message);
+                            }
+                        });
+                }else{
+                    alert("请按照要求登陆")
+                }
+            }
+
+        },
+        created() {
+
+        },
+
+    })
+</script>
+
+
+</html>

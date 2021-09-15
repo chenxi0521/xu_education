@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册</title>
+    <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/register.css" />
+    <script src="../../js/vue-v2.6.10.js"></script>
+    <script src="../../js/axios-0.18.0.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="pos">
+            <div class="login">
+                <span class="close iconfont icon-close"></span>
+                <img src="../../img/login/loginlogo.png" alt="">
+                <ul>
+                    <li></li>
+                    <li style="margin-bottom: 30px;font-size: 16px;color: red;" v-text="msg"></li>
+                    <li></li>
+                </ul>
+                <form action="" method="post" id="form">
+                    <input type="text" v-model="table.username" @blur="checkUsername()" id="" placeholder="请输入账号">
+                    <input type="text" v-model="table.phone" @blur="checkPhone()" placeholder="请输入您的手机号">
+                    <input type="password" v-model="table.password" @blur="checkPassword()" id="" placeholder="请再次输入密码">
+                    <input type="text" class="yanzhen" v-model="code" @blur="checkCode()" placeholder="请输入验证码">
+                    <span class="yanzhenma" v-text="initCode" @click="createCode()"></span>
+                    <div class="clear"></div>
+                    <div class="loginbtn" style="margin-left: 110px;line-height: 40px;" @click="register()">注册</div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            table: {
+                username: '',
+                phone: '',
+                password: ''
+            },
+            username_flag: false,
+            phone_flag: false,
+            password_flag: false,
+            code: '',
+            code_flag:false,
+            initCode: '',
+            msg: ''
+
+        },
+        methods: {
+            createCode() {
+                var str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                var s = "";
+                for (var i = 0; i < 4; i++) {
+                    var index = Math.round(Math.random() * 62);
+                    s += str.charAt(index);
+                }
+                this.initCode = s;
+
+            },
+            checkUsername() {
+                if (this.table.username == null || this.table.username.trim() == '') {
+                    this.msg = '账号不能为空';
+                    this.username_flag = false;
+                } else {
+
+                    axios({
+                            method: "post",
+                            url: "http://localhost:8080/yx_education_war_exploded/user?type=getUserByUsername&username=" + this.table.username
+                        }).then(obj => {
+                            if (obj.data.status == 1) {
+                                this.msg = obj.data.message;
+                                this.username_flag = false;
+                            } else {
+                                this.msg = '';
+                                this.username_flag = true
+                            }
+                        });
+
+                    ;
+                }
+            },
+            checkPhone() {
+                if (this.table.phone == null || this.table.phone.trim() == '') {
+                    this.msg = '手机号不能为空';
+                    this.phone_flag = false;
+                } else {
+                    var rule = /^1[3|5|6|7|8|9][0-9]{9}$/;
+                    if (rule.test(this.table.phone)) {
+                        axios({
+                            method: "post",
+                            url: "http://localhost:8080/yx_education_war_exploded/user?type=getuserByPhone&phone=" + this.table.phone
+                        }).then(obj => {
+                            if (obj.data.status == 1) {
+                                this.msg = obj.data.message;
+                                this.phone_flag = false;
+                            } else {
+                                this.msg = '';
+                                this.phone_flag = true;
+                            }
+                        });
+
+                    } else {
+                        this.msg = '手机号格式不正确';
+                        this.phone_flag = false;
+                    }
+                }
+            },
+            checkPassword() {
+                if (this.table.password == null || this.table.password.trim() == '') {
+                    this.msg = '密码不能为空';
+                    this.password_flag = false;
+                } else {
+                    if (this.table.password.length >= 6 && this.table.password.length <= 12) {
+                        this.msg = '';
+                        this.password_flag = true;
+                    } else {
+                        this.msg = '密码是6-12位字符';
+                        this.password_flag = false;
+                    }
+                }
+            },
+            checkCode() {
+                if (this.code == null || this.code.trim() == '') {
+                    this.msg = '验证码不能为空';
+                } else {
+                    if (this.code.toLowerCase() == this.initCode.toLowerCase()) {
+                        this.msg = '';
+                        this.code_flag = true;
+                    } else {
+                        this.msg = '验证码输入有误';
+                        this.code_flag = false;
+                    }
+                }
+            },
+            register(){
+                if(this.username_flag&&this.phone_flag&&this.password_flag&&this.code_flag){
+                    var obj = JSON.stringify(this.table);
+                    var params = new URLSearchParams();
+                    console.log(obj);
+                    params.append("obj",obj);
+                    axios({
+                        method:"post",
+                        url:"http://localhost:8080/yx_education_war_exploded/user?type=register",
+                        data:params
+                    }).then(obj => {
+                        if(obj.data.status == 1){
+                            alert("注册成功");
+                            location.href = "login.html";
+                        }else{
+                            alert("注册失败");
+                        }
+                    });
+                }else{
+                    alert("请按照要求注册");
+                }
+            }
+        },
+        created() {
+            this.createCode();
+        },
+
+    })
+</script>
+
+
+</html>
